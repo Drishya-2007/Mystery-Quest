@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mystery Quest Game Page</title>
+
+    <!-- React & Babel -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #020617;
+            color: #e2e8f0;
+            font-family: 'Rajdhani', sans-serif;
+        }
+        .glow-border {
+            box-shadow: 0 0 15px rgba(34, 211, 238, 0.3);
+            border: 1px solid rgba(34, 211, 238, 0.5);
+        }
+        .header-font { font-family: 'Orbitron', sans-serif; }
+        .progress-bar {
+            flex:1;
+            height:4px;
+            background:#1e293b;
+            border-radius:2px;
+        }
+        .progress-active {
+            background:#22d3ee;
+            box-shadow:0 0 8px #22d3ee;
+        }
+    </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyBaTarh1A0pww9sffihtB-BsWZMCG-xhUg",
+    authDomain: "mystery-quest-c511a.firebaseapp.com",
+    projectId: "mystery-quest-c511a",
+    storageBucket: "mystery-quest-c511a.firebasestorage.app",
+    messagingSenderId: "845886729629",
+    appId: "1:845886729629:web:2ed9290d5a18071f529374",
+    measurementId: "G-8LSCNZ9XCS"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script>
+
+<script type="text/babel">
+const { useState } = React;
+
+const CLUE_DATA = [
+  {
+    id: 1,
+    title:"The Shape Without a Body",
+    story:"The crime scene camera captured something impossible — a presence with no form. At exactly noon, when the light should reveal everything, it instead betrayed the truth.",
+    question: "I exist only when two meet. Light must lose for me to win. I prove presence without form, and betray you at noon. What am I?",
+    options: ["Darkness", "Shadow", "Reflection", "Silence"],
+    correctAnswer: "Shadow",
+    correctEvidence: "The CCTV captured a light distortion. Someone stood just outside the frame.",
+    wrongEvidence: "Darkness exists everywhere. This clue required interaction, not absence."
+  },
+  {
+    id: 2,
+    title:"The Missing Minute",
+    story:"Records appear intact, yet something essential is gone. No alarms were triggered, no signs of tampering remain — only a silent gap where certainty once existed.",
+    question: "I am stolen most by those who chase me. I heal nothing yet erase everything. You never see me leave, only notice I’m gone.",
+    options: ["Memory", "Time", "Sleep", "Chance"],
+    correctAnswer: "Time",
+    correctEvidence: "One minute was deliberately removed from the call logs.",
+    wrongEvidence: "Memory fades naturally. This disappearance was precise."
+  },
+  {
+    id: 3,
+    title:"Engineered Quiet",
+    story:"This was not chaos. It was preparation.The room absorbed sound unnaturally, as if someone wanted questions to end before they were asked.",
+    question: "I am not absence, I am a presence feared. I am created, not found. I end questions, not noise.",
+    options: ["Darkness", "Fear", "Silence", "Death"],
+    correctAnswer: "Silence",
+    correctEvidence: "Acoustic panels were installed. Silence was engineered.",
+    wrongEvidence: "Fear is emotional. This clue describes something constructed."
+  },
+  {
+    id: 4,
+    title:"A Perfect Rehearsal",
+    story:"The witness speaks with confidence, repeating every detail flawlessly.Too flawlessly. Truth bends when it’s practiced too many times.",
+    question: "I survive only when repeated. I die when examined. I borrow truth to look alive.",
+    options: ["Rumor", "Lie", "Story", "Memory"],
+    correctAnswer: "Lie",
+    correctEvidence: "The witness repeated identical phrasing — rehearsed, not recalled.",
+    wrongEvidence: "Stories evolve. This remained unchanged."
+  },
+  {
+    id: 5,
+    title:"The Open Moment",
+    story:"No force was used. No resistance recorded.Whatever happened next was allowed — by choice, timing, or something far more calculated.",
+    question: "I let everyone in, yet belong to no one. I disappear when noticed, and exist only once.",
+    options: ["Key", "Door", "Chance", "Opportunity"],
+    correctAnswer: "Opportunity",
+    correctEvidence: "The victim willingly opened the door. No forced entry.",
+    wrongEvidence: "A door is physical. This clue refers to timing."
+  },
+];
+
+function getRank(score){
+  if(score >= 100) return "🏆 Chief Detective";
+  if(score >= 80) return "🕵️ Major Detective";
+  if(score >= 60) return "🔍 Detective";
+  if(score >= 20) return "📘 Junior Detective";
+  return "🧢 Trainee";
+}
+
+function CaseFile() {
+  const [index,setIndex] = useState(0);
+  const [selected,setSelected] = useState(null);
+  const [feedback,setFeedback] = useState("");
+  const [score,setScore] = useState(0);
+  const [locked,setLocked] = useState(false);
+  const [showSummary,setShowSummary] = useState(false);
+
+  const clue = CLUE_DATA[index];
+
+  const choose = opt => {
+    if(locked) return;
+    setSelected(opt);
+    setLocked(true);
+
+    if(opt === clue.correctAnswer){
+      setScore(s => s + 20);
+      setFeedback(`✔ Evidence secured — ${clue.correctEvidence}`);
+    } else {
+      setScore(s => Math.max(0, s - 10));
+      setFeedback(`✖ Wrong evidence — ${clue.wrongEvidence}`);
+    }
+  };
+
+  const next = () => {
+    if(index === CLUE_DATA.length - 1){
+     setShowSummary(true);
+      db.collection("scores").add({
+    player: "Drishya.R",
+    score: score,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+  })
+  .then(() => console.log("Score saved to Firebase"))
+  .catch(err => console.error("Error:", err));
+
+    } else {
+      setIndex(i => i + 1);
+      setSelected(null);
+      setFeedback("");
+      setLocked(false);
+    }
+  };
+
+  const resetGame = () => {
+    setIndex(0);
+    setSelected(null);
+    setFeedback("");
+    setScore(0);
+    setLocked(false);
+    setShowSummary(false);
+  };
+
+  return (
+    <>
+    <div className="max-w-4xl mx-auto p-8">
+
+      <div className="flex justify-between mb-6">
+        <span className="text-xs text-slate-500">CLUE {index+1} / 5</span>
+        <span className="header-font text-orange-500">{score} PTS</span>
+      </div>
+
+      <div className="flex gap-2 mb-10">
+        {CLUE_DATA.map((_,i)=>(
+          <div key={i} className={`progress-bar ${i<=index?'progress-active':''}`}></div>
+        ))}
+      </div>
+
+      <h2 className="header-font text-2xl text-cyan-400 mb-2">{clue.title}</h2>
+      <p className="text-slate-400 italic mb-6">{clue.story}</p>
+
+      <div className="glow-border p-8 rounded mb-8 text-center italic text-xl">
+        "{clue.question}"
+      </div>
+
+      <div className="space-y-4">
+        {clue.options.map(opt=>(
+          <button key={opt}
+            onClick={()=>choose(opt)}
+            className={`w-full p-4 border rounded text-left transition
+              ${selected===opt
+                ? opt===clue.correctAnswer
+                  ? 'border-cyan-400 bg-cyan-950/30'
+                  : 'border-red-500 bg-red-950/30'
+                : 'border-slate-800 hover:border-slate-600'}`}>
+            {opt}
+          </button>
+        ))}
+      </div>
+
+      {feedback && (
+        <div className="mt-6 text-sm text-slate-300 italic">{feedback}</div>
+      )}
+
+      {locked && (
+        <div className="mt-10 flex justify-end">
+          <button onClick={next}
+            className="header-font border border-cyan-400 px-8 py-2 text-cyan-400 hover:bg-cyan-400 hover:text-black">
+            {index === 4 ? "CLOSE CASE" : "NEXT CLUE"}
+          </button>
+        </div>
+      )}
+    </div>
+
+    {showSummary && (
+      <div className="fixed inset-0 bg-black/80 backdrop-blur flex items-center justify-center p-6 z-50">
+        <div className="glow-border bg-slate-950 p-10 max-w-md w-full text-center rounded-xl">
+          <p className="text-xs tracking-widest text-slate-500 mb-2">CASE FILE #0047</p>
+          <h2 className="header-font text-3xl text-cyan-400 mb-6">CASE CLOSED</h2>
+
+          <p className="text-slate-400 italic mb-8 text-sm">
+            "The silence told you everything. What was buried in whispers and riddles now rests in your case file.
+            The neon district sleeps a little easier tonight."
+          </p>
+
+          <div className="mb-6">
+            <div className="text-4xl header-font text-orange-500">{score}</div>
+            <div className="text-xs uppercase text-slate-500">Evidence Points</div>
+          </div>
+
+          <div className="mb-6 text-xl">{getRank(score)}</div>
+
+          <button onClick={resetGame}
+            className="w-full border border-slate-500 py-3 header-font hover:bg-white hover:text-black mb-4">
+            REOPEN CASE
+          </button>
+
+          <button onClick={()=> window.location.href = 'level.html'}
+            className="w-full border border-cyan-400 py-3 header-font text-cyan-400 hover:bg-cyan-400 hover:text-black">
+            HOME
+          </button>
+
+        </div>
+      </div>
+    )}
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<CaseFile/>);
+</script>
+</body>
+</html>

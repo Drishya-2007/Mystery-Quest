@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mystery Quest Game Page</title>
+
+  <!-- React & Babel -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      background-color: #020617;
+      color: #e2e8f0;
+      font-family: 'Rajdhani', sans-serif;
+    }
+    .glow-border {
+      box-shadow: 0 0 15px rgba(34, 211, 238, 0.3);
+      border: 1px solid rgba(34, 211, 238, 0.5);
+    }
+    .header-font { font-family: 'Orbitron', sans-serif; }
+    .progress-bar {
+      flex:1;
+      height:4px;
+      background:#1e293b;
+      border-radius:2px;
+    }
+    .progress-active {
+      background:#22d3ee;
+      box-shadow:0 0 8px #22d3ee;
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyBaTarh1A0pww9sffihtB-BsWZMCG-xhUg",
+    authDomain: "mystery-quest-c511a.firebaseapp.com",
+    projectId: "mystery-quest-c511a",
+    storageBucket: "mystery-quest-c511a.firebasestorage.app",
+    messagingSenderId: "845886729629",
+    appId: "1:845886729629:web:2ed9290d5a18071f529374",
+    measurementId: "G-8LSCNZ9XCS"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script>
+
+<script type="text/babel">
+const { useState } = React;
+
+const CLUE_DATA = [
+  {
+    id: 1,
+    title: "Case 1: The Watch",
+    story: "A watch stopped exactly at the moment of truth.",
+    question: "I die doing my job. I tell the truth only once. After that, I lie forever.",
+    options: ["Battery", "Clock", "Watch", "Phone"],
+    correctAnswer: "Watch",
+    correctEvidence: "The watch stops at exactly the moment of truth — only once.",
+    wrongEvidence: "Other devices can fail, but they don't capture the truth once and for all."
+  },
+  {
+    id: 2,
+    title: "Case 2: The Silent Call",
+    story: "A missed call that revealed more than words could.",
+    question: "I scream without sound. I answer without replying. I expose fear by being untouched.",
+    options: ["Alarm", "Ignored phone", "Message", "Call log"],
+    correctAnswer: "Ignored phone",
+    correctEvidence: "The ignored call left a silent trace, revealing fear.",
+    wrongEvidence: "Alarms or messages make noise; they don’t silently expose anything."
+  },
+  {
+    id: 3,
+    title: "Case 3: The Poison",
+    story: "A subtle, patient killer left no trace.",
+    question: "I kill without violence. I leave no stains. I require patience, not strength.",
+    options: ["Knife", "Poison", "Gun", "Fall"],
+    correctAnswer: "Poison",
+    correctEvidence: "The substance left no mark but caused its effect quietly.",
+    wrongEvidence: "Knives, guns, or falls are violent and obvious, unlike this subtle method."
+  },
+  {
+    id: 4,
+    title: "Case 4: Someone Close",
+    story: "The danger lurked where trust was highest.",
+    question: "I am trusted before known. I am dangerous when familiar. I walk past suspicion daily.",
+    options: ["Stranger", "Friend", "Someone close", "Neighbor"],
+    correctAnswer: "Someone close",
+    correctEvidence: "The person no one suspects was the real threat.",
+    wrongEvidence: "Strangers or neighbors are easily suspected, not the quiet danger."
+  },
+  {
+    id: 5,
+    title: "Case 5: Assumption",
+    story: "Everyone relied on it to solve the puzzle.",
+    question: "I connect all answers, yet am never an answer. I feel true even when wrong.",
+    options: ["Logic", "Evidence", "Assumption", "Instinct"],
+    correctAnswer: "Assumption",
+    correctEvidence: "Everyone relied on assumptions to reach conclusions.",
+    wrongEvidence: "Evidence or logic are tools, not feelings that guide belief falsely."
+  }
+];
+
+function getRank(score){
+  if(score >= 100) return "🏆 Chief Detective";
+  if(score >= 80) return "🕵️ Major Detective";
+  if(score >= 60) return "🔍 Detective";
+  if(score >= 20) return "📘 Junior Detective";
+  return "🧢 Trainee";
+}
+
+function CaseFile() {
+  const [index, setIndex] = useState(0);
+  const [selected, setSelected] = useState(null);
+  const [feedback, setFeedback] = useState("");
+  const [score, setScore] = useState(0);
+  const [locked, setLocked] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
+
+  const clue = CLUE_DATA[index];
+
+  const choose = opt => {
+    if(locked) return;
+    setSelected(opt);
+    setLocked(true);
+
+    if(opt === clue.correctAnswer){
+      setScore(s => s + 20);
+      setFeedback(`✔ Evidence secured — ${clue.correctEvidence}`);
+    } else {
+      setScore(s => Math.max(0, s - 10));
+      setFeedback(`✖ Wrong evidence — ${clue.wrongEvidence}`);
+    }
+  };
+
+  const next = () => {
+    if(index === CLUE_DATA.length - 1){
+      setShowSummary(true);
+      db.collection("scores").add({
+    player: "Drishya.R",
+    score: score,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+  })
+  
+    } else {
+      setIndex(i => i + 1);
+      setSelected(null);
+      setFeedback("");
+      setLocked(false);
+    }
+  };
+
+  const resetGame = () => {
+    setIndex(0);
+    setSelected(null);
+    setFeedback("");
+    setScore(0);
+    setLocked(false);
+    setShowSummary(false);
+  };
+
+  return (
+    <>
+    <div className="max-w-4xl mx-auto p-8">
+
+      <div className="flex justify-between mb-6">
+        <span className="text-xs text-slate-500">CLUE {index+1} / 5</span>
+        <span className="header-font text-orange-500">{score} PTS</span>
+      </div>
+
+      <div className="flex gap-2 mb-10">
+        {CLUE_DATA.map((_,i)=>(
+          <div key={i} className={`progress-bar ${i<=index?'progress-active':''}`}></div>
+        ))}
+      </div>
+
+      <h2 className="header-font text-2xl text-cyan-400 mb-2">{clue.title}</h2>
+      <p className="text-slate-400 italic mb-6">{clue.story}</p>
+
+      <div className="glow-border p-8 rounded mb-8 text-center italic text-xl">
+        "{clue.question}"
+      </div>
+
+      <div className="space-y-4">
+        {clue.options.map(opt=>(
+          <button key={opt}
+            onClick={()=>choose(opt)}
+            className={`w-full p-4 border rounded text-left transition
+              ${selected===opt
+                ? opt===clue.correctAnswer
+                  ? 'border-cyan-400 bg-cyan-950/30'
+                  : 'border-red-500 bg-red-950/30'
+                : 'border-slate-800 hover:border-slate-600'}`}>
+            {opt}
+          </button>
+        ))}
+      </div>
+
+      {feedback && (
+        <div className="mt-6 text-sm text-slate-300 italic">{feedback}</div>
+      )}
+
+      {locked && (
+        <div className="mt-10 flex justify-end">
+          <button onClick={next}
+            className="header-font border border-cyan-400 px-8 py-2 text-cyan-400 hover:bg-cyan-400 hover:text-black">
+            {index === 4 ? "CLOSE CASE" : "NEXT CLUE"}
+          </button>
+        </div>
+      )}
+    </div>
+
+    {showSummary && (
+      <div className="fixed inset-0 bg-black/80 backdrop-blur flex items-center justify-center p-6 z-50">
+        <div className="glow-border bg-slate-950 p-10 max-w-md w-full text-center rounded-xl">
+          <p className="text-xs tracking-widest text-slate-500 mb-2">CASE FILE #0047</p>
+          <h2 className="header-font text-3xl text-cyan-400 mb-6">CASE CLOSED</h2>
+
+          <p className="text-slate-400 italic mb-8 text-sm">
+            "The mystery has been solved. All clues are secured and evidence logged."
+          </p>
+
+          <div className="mb-6">
+            <div className="text-4xl header-font text-orange-500">{scores}</div>
+            <div className="text-xs uppercase text-slate-500">Evidence Points</div>
+          </div>
+
+          <div className="mb-6 text-xl">{getRank(scores)}</div>
+
+          <button onClick={resetGame}
+            className="w-full border border-slate-500 py-3 header-font hover:bg-white hover:text-black mb-4">
+            REOPEN CASE
+          </button>
+
+          <button onClick={()=> window.location.href = 'level.html'}
+            className="w-full border border-cyan-400 py-3 header-font text-cyan-400 hover:bg-cyan-400 hover:text-black">
+            HOME
+          </button>
+
+        </div>
+      </div>
+    )}
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<CaseFile/>);
+</script>
+</body>
+</html>

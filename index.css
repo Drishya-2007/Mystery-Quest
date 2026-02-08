@@ -1,0 +1,214 @@
+/* =========================
+   RESET & BASE
+========================= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Orbitron', sans-serif;
+  background: #000;
+  color: #cfd8dc;
+  overflow-x: hidden;
+}
+
+/* =========================
+   BACKGROUND IMAGE
+========================= */
+body {
+  background: url("index.jpg") center / cover no-repeat fixed;
+  position: relative;
+}
+
+/* =========================
+   DARK NEON OVERLAY (KEY FIX)
+========================= */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(
+    circle at center,
+    rgba(8, 9, 9, 0.18),
+    rgba(0, 0, 0, 0.88)
+  );
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* =========================
+   NAVBAR
+========================= */
+.navbar {
+  position: relative;
+  z-index: 2;
+  padding: 20px 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 1rem;
+  letter-spacing: 3px;
+  color: #7fe9ff;
+  text-shadow: 0 0 10px rgba(0, 200, 255, 0.4);
+}
+
+.nav-links {
+  list-style: none;
+  display: flex;
+  gap: 30px;
+}
+
+.nav-links a {
+  text-decoration: none;
+  font-size: 0.85rem;
+  letter-spacing: 2px;
+  color: rgba(200, 230, 240, 0.65);
+  transition: 0.3s;
+}
+
+.nav-links a:hover {
+  color: #00eaff;
+  text-shadow: 0 0 8px rgba(0, 234, 255, 0.6);
+}
+
+/* =========================
+   HERO SECTION
+========================= */
+.hero {
+  position: relative;
+  z-index: 2;
+  min-height: calc(100vh - 80px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
+}
+
+.hero-content {
+  max-width: 720px;
+}
+
+/* =========================
+   CASE FILE TEXT
+========================= */
+.case-file {
+  font-size: 0.75rem;
+  letter-spacing: 4px;
+  color: rgba(160, 210, 220, 0.7);
+  margin-bottom: 18px;
+}
+
+/* =========================
+   MAIN NEON TITLE
+========================= */
+.neon-title {
+  font-size: clamp(3.2rem, 7vw, 5rem);
+  letter-spacing: 6px;
+  color: #00eaff;
+  margin-bottom: 24px;
+  line-height: 1.1;
+
+  text-shadow:
+    0 0 6px rgba(0, 234, 255, 0.6),
+    0 0 18px rgba(0, 180, 255, 0.5),
+    0 0 40px rgba(0, 120, 255, 0.4);
+}
+
+/* =========================
+   STORY TEXT
+========================= */
+.story {
+  font-size: 0.9rem;
+  line-height: 1.7;
+  font-style: italic;
+  color: rgba(220, 235, 240, 0.85);
+  margin-bottom: 14px;
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
+}
+
+.sub {
+  font-size: 0.8rem;
+  color: rgba(180, 210, 220, 0.7);
+  margin-bottom: 32px;
+}
+
+/* =========================
+   BUTTONS
+========================= */
+.btn-group {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 14px 28px;
+  text-decoration: none;
+  font-size: 0.8rem;
+  letter-spacing: 2px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(4px);
+  transition: 0.3s;
+}
+
+/* CYAN BUTTON */
+.btn.cyan {
+  color: #00eaff;
+  border: 2px solid #00eaff;
+  box-shadow: 0 0 14px rgba(0, 234, 255, 0.4);
+}
+
+.btn.cyan:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 30px rgba(0, 234, 255, 0.8);
+}
+
+/* YELLOW BUTTON */
+.btn.yellow {
+  color: #ffb300;
+  border: 2px solid #ffb300;
+  box-shadow: 0 0 14px rgba(255, 179, 0, 0.4);
+}
+
+.btn.yellow:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 30px rgba(255, 179, 0, 0.8);
+}
+
+/* =========================
+   FOOTER
+========================= */
+footer {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: 16px;
+  font-size: 0.7rem;
+  color: rgba(160, 190, 200, 0.5);
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 768px) {
+  .navbar {
+    padding: 16px 20px;
+  }
+
+  .nav-links {
+    gap: 16px;
+  }
+
+  .neon-title {
+    letter-spacing: 4px;
+  }
+}
