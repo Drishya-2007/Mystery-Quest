@@ -42,28 +42,22 @@
 <body>
 <div id="root"></div>
 <script type="module">
-  // Import the functions you need from the SDKs you need
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
+  import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
   const firebaseConfig = {
     apiKey: "AIzaSyBaTarh1A0pww9sffihtB-BsWZMCG-xhUg",
     authDomain: "mystery-quest-c511a.firebaseapp.com",
-    projectId: "mystery-quest-c511a",
-    storageBucket: "mystery-quest-c511a.firebasestorage.app",
-    messagingSenderId: "845886729629",
-    appId: "1:845886729629:web:2ed9290d5a18071f529374",
-    measurementId: "G-8LSCNZ9XCS"
+    projectId: "mystery-quest-c511a"
   };
 
-  // Initialize Firebase
   const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
+  window.db = getFirestore(app);
+  window.addDoc = addDoc;
+  window.collection = collection;
+  window.serverTimestamp = serverTimestamp;
 </script>
+
 
 <script type="text/babel">
 const { useState } = React;
@@ -156,14 +150,13 @@ function CaseFile() {
   const next = () => {
     if(index === CLUE_DATA.length - 1){
      setShowSummary(true);
-      db.collection("scores").add({
-    player: "Drishya.R",
-    score: score,
-    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-  })
-  .then(() => console.log("Score saved to Firebase"))
-  .catch(err => console.error("Error:", err));
-
+     addDoc(collection(db, "scores"), {
+  player: "Drishya.R",
+  score: score,
+  timestamp: serverTimestamp()
+})
+.then(() => console.log("Score saved to Firebase"))
+.catch(err => console.error(err));
     } else {
       setIndex(i => i + 1);
       setSelected(null);
