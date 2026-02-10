@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width-device-width", initial-scale="1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Mystery Quest</title>
 
   <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -40,7 +40,7 @@
 <div id="root"></div>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+  import { getFirestore, collection,doc, setDoc,increment, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBaTarh1A0pww9sffihtB-BsWZMCG-xhUg",
@@ -50,11 +50,13 @@
 
   const app = initializeApp(firebaseConfig);
   window.db = getFirestore(app);
+  window.doc = doc;
+  window.setDoc = setDoc;
+  window.increment = increment;
   window.addDoc = addDoc;
   window.collection = collection;
   window.serverTimestamp = serverTimestamp;
 </script>
-
 
 <script type="text/babel">
 const { useState } = React;
@@ -136,22 +138,28 @@ function CaseFile() {
   };
 
   const next = () => {
-    if(index === CLUE_DATA.length - 1){
-     setShowSummary(true); 
-      addDoc(collection(db, "scores"), {
-  player: "Drishya.R",
-  score: score,
-  timestamp: serverTimestamp()
-})
-.then(() => console.log("Score saved to Firebase"))
-.catch(err => console.error(err));
+    if (index === CLUE_DATA.length - 1) {
+        setShowSummary(true);
+
+        const playerName = localStorage.getItem('detectiveAlias') || "Anonymous";
+
+        // Targeting the 'playerName' directly prevents duplicate rows on the scoreboard
+        window.setDoc(window.doc(window.db, "leaderboard", playerName), {
+            name: playerName,
+            score: score, // This replaces the old score, preventing "farming" by replay
+            cases: 1, // You can change this to 2, 3, 4, 5 for your other case files
+            lastActive: window.serverTimestamp()
+        }, { merge: true })
+        .then(() => console.log("Detective Profile Updated"))
+        .catch(err => console.error("Firebase Error:", err));
+
     } else {
-      setIndex(i => i + 1);
-      setSelected(null);
-      setFeedback("");
-      setLocked(false);
+        setIndex(i => i + 1);
+        setSelected(null);
+        setFeedback("");
+        setLocked(false);
     }
-  };
+};
 
   const resetGame = () => {
     setIndex(0);

@@ -1,61 +1,142 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width-device-width", initial-scale="1.0">
-<title>Detective Scoreboard</title>
-<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mystery Quest - Leaderboard</title>
+    <style>
+        :root { --neon-gold: #f0c342; --neon-blue: #4facfe; --bg: #020617; }
+        body { background: #020617; color: white; font-family: sans-serif; text-align: center; margin: 0; overflow-x: hidden; }
+        
+        .top-nav { position: absolute; top: 20px; right: 20px; display: flex; gap: 15px; z-index: 100; }
+        .nav-link { color: var(--neon-blue); text-decoration: none; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; cursor: pointer; background: none; border: none; padding: 0; font-family: inherit; }
+        .nav-link:hover { color: var(--neon-gold); text-shadow: 0 0 8px var(--neon-gold); }
 
-<style>
-  body { background:#020617; color:#e2e8f0; font-family:'Rajdhani',sans-serif; }
-  .header-font { font-family:'Orbitron',sans-serif; }
-  .score-card { border:1px solid #22d3ee; padding:12px; border-radius:8px; margin-bottom:8px; box-shadow:0 0 8px #22d3ee; }
-</style>
+        #nameModal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(5px); }
+        .modal-content { border: 2px solid var(--neon-blue); padding: 40px; border-radius: 15px; background: #0f172a; box-shadow: 0 0 20px var(--neon-blue); width: 300px; }
+        .modal-content h2 { margin-top: 0; font-size: 1.5rem; }
+        .modal-content input { background: #1e293b; border: 1px solid var(--neon-blue); color: white; padding: 12px; margin-bottom: 20px; outline: none; width: 100%; text-align: center; box-sizing: border-box; }
+
+        .container { max-width: 700px; margin: 80px auto 50px auto; padding: 20px; }
+        .rank-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 15px; margin: 10px 0; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; }
+        .user-highlight { border: 2px solid var(--neon-blue) !important; box-shadow: 0 0 10px var(--neon-blue); background: rgba(79, 172, 254, 0.1); }
+        .top-tier { border-color: var(--neon-gold); }
+        
+        .btn-main { background: var(--neon-gold); border: none; padding: 14px 30px; cursor: pointer; font-weight: bold; border-radius: 5px; text-decoration: none; color: black; display: inline-block; margin-bottom: 30px; text-transform: uppercase; }
+        .btn-confirm { background: var(--neon-blue); border: none; padding: 12px; width: 100%; cursor: pointer; font-weight: bold; border-radius: 5px; color: black; text-transform: uppercase; }
+    </style>
 </head>
 <body>
-<div id="root"></div>
 
-<script type="text/babel">
-const { useState, useEffect } = React;
+    <nav class="top-nav">
+        <a href="index.html" class="nav-link">Home</a>
+        <button id="changeNameTrigger" class="nav-link">Change Name</button>
+    </nav>
 
-function Scoreboard() {
-  const [scores, setScores] = useState([]);
-
-  useEffect(() => {
-    fetch('http://localhost:5000/score')
-      .then(res => res.json())
-      .then(data => {
-        // sort scores descending
-        data.sort((a,b) => b.score - a.score);
-        setScores(data);
-      })
-      .catch(err => console.error("Error fetching scores:", err));
-  }, []);
-
-  return (
-    <div className="max-w-md mx-auto p-8">
-      <h1 className="header-font text-3xl text-cyan-400 mb-6 text-center">Detective Scoreboard</h1>
-      {scores.length === 0 && <p className="text-slate-400 text-center">No scores yet.</p>}
-      {scores.map((s,i) => (
-        <div key={i} className="score-card flex justify-between">
-          <span>{i+1}. {s.name}</span>
-          <span>{s.score} pts</span>
+    <div id="nameModal">
+        <div class="modal-content">
+            <h2 style="color: var(--neon-gold)">IDENTIFY YOURSELF</h2>
+            <input type="text" id="aliasInput" placeholder="Enter Name...">
+            <button class="btn-confirm" id="saveName">CONFIRM</button>
         </div>
-      ))}
-      <button onClick={()=>window.location.href='index.html'}
-        className="w-full border border-cyan-400 py-3 mt-6 header-font text-cyan-400 hover:bg-cyan-400 hover:text-black">
-        BACK TO GAME
-      </button>
     </div>
-  );
-}
 
-ReactDOM.createRoot(document.getElementById('root')).render(<Scoreboard />);
-</script>
+    <div class="container">
+        <h1 style="color: var(--neon-gold); letter-spacing: 2px; margin-bottom: 30px;">DETECTIVE RANKINGS</h1>
+        <a href="level.html" class="btn-main">SOLVE NEXT CASE</a>
+        <div id="leaderboard">Loading rankings...</div>
+    </div>
 
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBaTarh1A0pww9sffihtB-BsWZMCG-xhUg",
+            authDomain: "mystery-quest-c511a.firebaseapp.com",
+            projectId: "mystery-quest-c511a"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const modal = document.getElementById('nameModal');
+        const inputField = document.getElementById('aliasInput');
+        const changeBtn = document.getElementById('changeNameTrigger');
+
+        let alias = localStorage.getItem('detectiveAlias');
+
+        // Initial check
+        if (!alias) {
+            modal.style.display = 'flex';
+        } else {
+            startLiveUpdates();
+        }
+
+        // Change Name Logic
+        changeBtn.onclick = () => {
+            modal.style.display = 'flex';
+            if(alias) inputField.value = alias;
+        };
+
+        document.getElementById('saveName').onclick = async () => {
+            const val = inputField.value.trim();
+            if (val) {
+                alias = val;
+                localStorage.setItem('detectiveAlias', alias);
+                modal.style.display = 'none';
+                
+                // Ensure record exists in Firebase
+                try {
+                    await setDoc(doc(db, "leaderboard", alias), { name: alias }, { merge: true });
+                    startLiveUpdates();
+                } catch (e) {
+                    console.error("Firebase Error: ", e);
+                }
+            }
+        };
+
+        function startLiveUpdates() {
+            const q = query(collection(db, "leaderboard"), orderBy("score", "desc"), limit(15));
+            onSnapshot(q, (snapshot) => {
+                const players = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    // Double check field names
+                    players.push({
+                        name: data.name || "Unknown",
+                        score: data.score || 0,
+                        cases: data.cases || 0
+                    });
+                });
+                
+                const bots = [
+                    {name:"ShadowCipher", score:450, cases:4},
+                    {name:"NeonWraith", score:350, cases:3},
+                    {name:"PhantomByte", score:250, cases:2},
+                    {name:"Cyberbro", score:150, cases:1}
+                ];
+
+                const combined = [...players];
+                bots.forEach(b => { if(!combined.find(p => p.name === b.name)) combined.push(b); });
+                combined.sort((a,b) => b.score - a.score);
+                render(combined);
+            });
+        }
+
+        function render(list) {
+            const container = document.getElementById('leaderboard');
+            container.innerHTML = list.map((p, i) => `
+                <div class="rank-card ${p.name === alias ? 'user-highlight' : ''} ${i < 3 ? 'top-tier' : ''}">
+                    <div style="text-align: left">
+                        <span style="color: #666; margin-right: 10px;">#${i+1}</span>
+                        <span style="font-weight: bold">${p.name}</span>
+                        <div style="font-size: 0.7rem; color: #888">Cases: ${p.cases} / 5</div>
+                    </div>
+                    <div style="color: var(--neon-gold); font-weight: bold; font-size: 1.2rem">${p.score}</div>
+                </div>
+            `).join('');
+        }
+    </script>
 </body>
 </html>
