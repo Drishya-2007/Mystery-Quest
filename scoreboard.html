@@ -6,45 +6,47 @@
     <title>Mystery Quest - Leaderboard</title>
     <style>
         :root { --neon-gold: #f0c342; --neon-blue: #4facfe; --bg: #020617; }
-        body { background: #020617; color: white; font-family: sans-serif; text-align: center; margin: 0; overflow-x: hidden; }
+        body { background: #020617; color: white; font-family: sans-serif; text-align: center; margin: 0; }
         
         .top-nav { position: absolute; top: 20px; right: 20px; display: flex; gap: 15px; z-index: 100; }
-        .nav-link { color: var(--neon-blue); text-decoration: none; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; cursor: pointer; background: none; border: none; padding: 0; font-family: inherit; }
-        .nav-link:hover { color: var(--neon-gold); text-shadow: 0 0 8px var(--neon-gold); }
+        .nav-link { color: var(--neon-blue); text-decoration: none; font-size: 0.8rem; text-transform: uppercase; font-weight: bold; cursor: pointer; background: none; border: none; }
 
-        #nameModal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(5px); }
-        .modal-content { border: 2px solid var(--neon-blue); padding: 40px; border-radius: 15px; background: #0f172a; box-shadow: 0 0 20px var(--neon-blue); width: 300px; }
-        .modal-content h2 { margin-top: 0; font-size: 1.5rem; }
-        .modal-content input { background: #1e293b; border: 1px solid var(--neon-blue); color: white; padding: 12px; margin-bottom: 20px; outline: none; width: 100%; text-align: center; box-sizing: border-box; }
-
-        .container { max-width: 700px; margin: 80px auto 50px auto; padding: 20px; }
-        .rank-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 15px; margin: 10px 0; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; }
-        .user-highlight { border: 2px solid var(--neon-blue) !important; box-shadow: 0 0 10px var(--neon-blue); background: rgba(79, 172, 254, 0.1); }
-        .top-tier { border-color: var(--neon-gold); }
+        #nameModal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; justify-content: center; align-items: center; z-index: 9999; }
+        .modal-content { border: 2px solid var(--neon-blue); padding: 30px; border-radius: 12px; background: #0f172a; width: 280px; box-shadow: 0 0 20px var(--neon-blue); }
         
-        .btn-main { background: var(--neon-gold); border: none; padding: 14px 30px; cursor: pointer; font-weight: bold; border-radius: 5px; text-decoration: none; color: black; display: inline-block; margin-bottom: 30px; text-transform: uppercase; }
-        .btn-confirm { background: var(--neon-blue); border: none; padding: 12px; width: 100%; cursor: pointer; font-weight: bold; border-radius: 5px; color: black; text-transform: uppercase; }
+        /* Fixed Spacing: Input no longer sticks to button */
+        .modal-content input { 
+            background: #1e293b; border: 1px solid var(--neon-blue); color: white; 
+            padding: 12px; margin-bottom: 25px; width: 100%; text-align: center; box-sizing: border-box;
+            border-radius: 5px;
+        }
+
+        .container { max-width: 600px; margin: 90px auto; padding: 20px; }
+        .rank-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 12px; margin: 8px 0; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; }
+        .user-highlight { border: 2px solid var(--neon-blue) !important; background: rgba(79, 172, 254, 0.1); }
+        
+        .btn-main { background: var(--neon-gold); border: none; padding: 14px 28px; cursor: pointer; font-weight: bold; border-radius: 4px; text-decoration: none; color: black; display: inline-block; margin-bottom: 25px; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
     <nav class="top-nav">
         <a href="index.html" class="nav-link">Home</a>
-        <button id="changeNameTrigger" class="nav-link">Change Name</button>
+        <button id="triggerName" class="nav-link">Change Name</button>
     </nav>
 
     <div id="nameModal">
         <div class="modal-content">
-            <h2 style="color: var(--neon-gold)">IDENTIFY YOURSELF</h2>
-            <input type="text" id="aliasInput" placeholder="Enter Name...">
-            <button class="btn-confirm" id="saveName">CONFIRM</button>
+            <h2 style="color: var(--neon-gold); margin-top:0;">IDENTIFY YOURSELF</h2>
+            <input type="text" id="aliasInput" placeholder="Enter Your Name...">
+            <button class="btn-main" id="saveName" style="background: var(--neon-blue); width: 100%; margin:0;">CONFIRM</button>
         </div>
     </div>
 
     <div class="container">
-        <h1 style="color: var(--neon-gold); letter-spacing: 2px; margin-bottom: 30px;">DETECTIVE RANKINGS</h1>
+        <h1 style="color: var(--neon-gold); letter-spacing: 2px;">DETECTIVE RANKINGS</h1>
         <a href="level.html" class="btn-main">SOLVE NEXT CASE</a>
-        <div id="leaderboard">Loading rankings...</div>
+        <div id="leaderboard">Connecting to HQ...</div>
     </div>
 
     <script type="module">
@@ -59,83 +61,49 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-
         const modal = document.getElementById('nameModal');
-        const inputField = document.getElementById('aliasInput');
-        const changeBtn = document.getElementById('changeNameTrigger');
-
+        
         let alias = localStorage.getItem('detectiveAlias');
 
-        // Initial check
-        if (!alias) {
-            modal.style.display = 'flex';
-        } else {
-            startLiveUpdates();
-        }
+        // New User check
+        if (!alias) { modal.style.display = 'flex'; } 
+        else { startLiveUpdates(); }
 
-        // Change Name Logic
-        changeBtn.onclick = () => {
-            modal.style.display = 'flex';
-            if(alias) inputField.value = alias;
-        };
+        document.getElementById('triggerName').onclick = () => { modal.style.display = 'flex'; };
 
         document.getElementById('saveName').onclick = async () => {
-            const val = inputField.value.trim();
-            if (val) {
-                alias = val;
-                localStorage.setItem('detectiveAlias', alias);
+            const name = document.getElementById('aliasInput').value.trim();
+            if (name) {
+                localStorage.setItem('detectiveAlias', name);
+                alias = name;
                 modal.style.display = 'none';
-                
-                // Ensure record exists in Firebase
-                try {
-                    await setDoc(doc(db, "leaderboard", alias), { name: alias }, { merge: true });
-                    startLiveUpdates();
-                } catch (e) {
-                    console.error("Firebase Error: ", e);
-                }
+                // Creates entry so new user appears on list
+                await setDoc(doc(db, "leaderboard", name), { name: name, score: 0, cases: 0 }, { merge: true });
+                startLiveUpdates();
             }
         };
 
         function startLiveUpdates() {
-            const q = query(collection(db, "leaderboard"), orderBy("score", "desc"), limit(15));
-            onSnapshot(q, (snapshot) => {
-                const players = [];
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    // Double check field names
-                    players.push({
-                        name: data.name || "Unknown",
-                        score: data.score || 0,
-                        cases: data.cases || 0
-                    });
-                });
+            const q = query(collection(db, "leaderboard"), orderBy("score", "desc"), limit(10));
+            onSnapshot(q, (snaps) => {
+                const list = [];
+                snaps.forEach(d => list.push(d.data()));
                 
-                const bots = [
-                    {name:"ShadowCipher", score:450, cases:4},
-                    {name:"NeonWraith", score:350, cases:3},
-                    {name:"PhantomByte", score:250, cases:2},
-                    {name:"Cyberbro", score:150, cases:1}
-                ];
-
-                const combined = [...players];
+                const bots = [{name:"ShadowCipher", score:450, cases:4}, {name:"NeonWraith", score:350, cases:3}];
+                let combined = [...list];
                 bots.forEach(b => { if(!combined.find(p => p.name === b.name)) combined.push(b); });
                 combined.sort((a,b) => b.score - a.score);
-                render(combined);
-            });
-        }
 
-        function render(list) {
-            const container = document.getElementById('leaderboard');
-            container.innerHTML = list.map((p, i) => `
-                <div class="rank-card ${p.name === alias ? 'user-highlight' : ''} ${i < 3 ? 'top-tier' : ''}">
-                    <div style="text-align: left">
-                        <span style="color: #666; margin-right: 10px;">#${i+1}</span>
-                        <span style="font-weight: bold">${p.name}</span>
-                        <div style="font-size: 0.7rem; color: #888">Cases: ${p.cases} / 5</div>
+                document.getElementById('leaderboard').innerHTML = combined.map((p, i) => `
+                    <div class="rank-card ${p.name === alias ? 'user-highlight' : ''}">
+                        <div style="text-align:left">
+                            <span>#${i+1} <b>${p.name}</b></span>
+                            <div style="font-size:0.7rem; color:#888">Cases Solved: ${p.cases || 0}/5</div>
+                        </div>
+                        <div style="color:var(--neon-gold); font-weight:bold">${p.score || 0} PTS</div>
                     </div>
-                    <div style="color: var(--neon-gold); font-weight: bold; font-size: 1.2rem">${p.score}</div>
-                </div>
-            `).join('');
+                `).join('');
+            });
         }
     </script>
 </body>

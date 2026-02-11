@@ -138,20 +138,26 @@ function CaseFile() {
   };
 
   const next = () => {
+    // This checks if we are on the very last riddle (index 4)
     if (index === CLUE_DATA.length - 1) {
-        setShowSummary(true);
+      
+      const playerName = localStorage.getItem('detectiveAlias') || "Anonymous";
 
-        const playerName = localStorage.getItem('detectiveAlias') || "Anonymous";
-
-        // Targeting the 'playerName' directly prevents duplicate rows on the scoreboard
-        window.setDoc(window.doc(window.db, "leaderboard", playerName), {
-            name: playerName,
-            score: score, // This replaces the old score, preventing "farming" by replay
-            cases: 1, // You can change this to 2, 3, 4, 5 for your other case files
-            lastActive: window.serverTimestamp()
-        }, { merge: true })
-        .then(() => console.log("Detective Profile Updated"))
-        .catch(err => console.error("Firebase Error:", err));
+      // LOGIC FIX: Ensure the database write happens here!
+      window.setDoc(window.doc(window.db, "leaderboard", playerName), {
+          name: playerName,
+          score: score, 
+          cases: 1, 
+          lastActive: window.serverTimestamp()
+      }, { merge: true })
+      .then(() => {
+          console.log("Success: Data sent to Firebase");
+          setShowSummary(true); // Only show summary after data sends
+      })
+      .catch(err => {
+          console.error("Firebase failed to write:", err);
+          setShowSummary(true); // Show summary anyway so game doesn't freeze
+      });
 
     } else {
         setIndex(i => i + 1);
@@ -159,7 +165,7 @@ function CaseFile() {
         setFeedback("");
         setLocked(false);
     }
-};
+  };
 
   const resetGame = () => {
     setIndex(0);
